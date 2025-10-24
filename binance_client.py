@@ -1,7 +1,3 @@
-"""
-Binance API client wrapper with error handling and retry logic
-Implements HMAC SHA256 signature authentication
-"""
 import time
 import hmac
 import hashlib
@@ -14,14 +10,11 @@ from config import Config
 logger = logging.getLogger(__name__)
 
 class BinanceClientError(Exception):
-    """Custom exception for Binance API errors"""
     pass
 
 class BinanceFuturesClient:
-    """Client for Binance USDT-M Futures API"""
     
     def __init__(self):
-        """Initialize Binance Futures client"""
         Config.validate()
         self.api_key = Config.API_KEY
         self.api_secret = Config.API_SECRET
@@ -34,7 +27,6 @@ class BinanceFuturesClient:
         logger.info("Binance Futures client initialized", extra={'testnet': Config.TESTNET})
     
     def _generate_signature(self, params: Dict) -> str:
-        """Generate HMAC SHA256 signature for signed endpoints"""
         query_string = urlencode(params)
         signature = hmac.new(
             self.api_secret.encode('utf-8'),
@@ -44,12 +36,10 @@ class BinanceFuturesClient:
         return signature
     
     def _request(self, method: str, endpoint: str, params: Optional[Dict] = None, signed: bool = False) -> Dict:
-        """Make HTTP request to Binance API with retry logic"""
         url = f"{self.base_url}{endpoint}"
         params = params or {}
         
         if signed:
-    # Subtract 2 seconds to account for time ahead of server
             params['timestamp'] = int(time.time() * 1000) - 2000
             params['recvWindow'] = Config.DEFAULT_RECV_WINDOW
             params['signature'] = self._generate_signature(params)
@@ -67,7 +57,6 @@ class BinanceFuturesClient:
                 else:
                     raise ValueError(f"Unsupported HTTP method: {method}")
                 
-                # Log rate limit headers
                 if 'X-MBX-USED-WEIGHT-1M' in response.headers:
                     logger.debug(f"Rate limit used: {response.headers['X-MBX-USED-WEIGHT-1M']}")
                 
@@ -76,7 +65,6 @@ class BinanceFuturesClient:
                     logger.info(f"API Success: {method} {endpoint}", extra={'status': response.status_code})
                     return data
                 
-                # Handle specific error codes
                 elif response.status_code == 429:
                     logger.warning("Rate limit exceeded, backing off", extra={'retry_after': Config.RETRY_DELAY})
                     time.sleep(Config.RETRY_DELAY * (attempt + 1))
@@ -100,31 +88,26 @@ class BinanceFuturesClient:
         raise BinanceClientError("Request failed after all retries")
     
     def get_exchange_info(self, symbol: Optional[str] = None) -> Dict:
-        """Get exchange trading rules and symbol information"""
         endpoint = "/fapi/v1/exchangeInfo"
         params = {'symbol': symbol} if symbol else {}
         return self._request('GET', endpoint, params, signed=False)
     
     def place_order(self, params: Dict) -> Dict:
-        """Place a new order"""
         endpoint = "/fapi/v1/order"
         logger.info(f"Placing order", extra={'symbol': params.get('symbol'), 'side': params.get('side')})
         return self._request('POST', endpoint, params, signed=True)
     
     def cancel_order(self, symbol: str, order_id: int) -> Dict:
-        """Cancel an active order"""
         endpoint = "/fapi/v1/order"
         params = {'symbol': symbol, 'orderId': order_id}
         logger.info(f"Cancelling order", extra={'symbol': symbol, 'orderId': order_id})
         return self._request('DELETE', endpoint, params, signed=True)
     
     def get_order(self, symbol: str, order_id: int) -> Dict:
-        """Query order status"""
         endpoint = "/fapi/v1/order"
         params = {'symbol': symbol, 'orderId': order_id}
         return self._request('GET', endpoint, params, signed=True)
     
     def get_account_info(self) -> Dict:
-        """Get current account information"""
         endpoint = "/fapi/v2/account"
         return self._request('GET', endpoint, signed=True)
