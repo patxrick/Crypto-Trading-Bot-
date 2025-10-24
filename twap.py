@@ -1,7 +1,3 @@
-"""
-TWAP (Time-Weighted Average Price) execution module
-Splits large orders into smaller chunks executed over time
-"""
 import sys
 import time
 import logging
@@ -12,30 +8,14 @@ from validators import OrderValidator, ValidationError
 logger = logging.getLogger(__name__)
 
 class TWAPExecutor:
-    """Execute TWAP strategy on Binance Futures"""
     
     def __init__(self):
-        """Initialize TWAP executor"""
         self.client = BinanceFuturesClient()
         logger.info("TWAP executor initialized")
     
     def execute(self, symbol: str, side: str, total_quantity: float,
                 num_orders: int, interval_seconds: int) -> list:
-        """
-        Execute TWAP strategy
-        
-        Args:
-            symbol: Trading pair
-            side: BUY or SELL
-            total_quantity: Total quantity to execute
-            num_orders: Number of sub-orders
-            interval_seconds: Time interval between orders
-            
-        Returns:
-            List of order responses
-        """
         try:
-            # Validate inputs
             symbol = OrderValidator.validate_symbol(symbol)
             side = OrderValidator.validate_side(side)
             total_quantity = OrderValidator.validate_quantity(total_quantity)
@@ -46,7 +26,6 @@ class TWAPExecutor:
             if interval_seconds < 1:
                 raise ValidationError("Interval must be at least 1 second")
             
-            # Calculate order size
             order_size = total_quantity / num_orders
             
             logger.info(f"Starting TWAP execution", extra={
@@ -78,7 +57,6 @@ class TWAPExecutor:
                         'executedQty': result.get('executedQty')
                     })
                     
-                    # Wait before next order (except for last order)
                     if i < num_orders - 1:
                         time.sleep(interval_seconds)
                     
@@ -98,7 +76,6 @@ class TWAPExecutor:
             raise
 
 def main():
-    """CLI entry point for TWAP orders"""
     setup_logging()
     
     if len(sys.argv) < 6:
