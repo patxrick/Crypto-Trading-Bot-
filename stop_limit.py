@@ -1,7 +1,3 @@
-"""
-Stop-Limit order execution module
-Triggers a limit order when the stop price is reached
-"""
 import sys
 import logging
 from logger_config import setup_logging
@@ -11,39 +7,21 @@ from validators import OrderValidator, ValidationError
 logger = logging.getLogger(__name__)
 
 class StopLimitOrderExecutor:
-    """Execute stop-limit orders on Binance Futures"""
     
     def __init__(self):
-        """Initialize stop-limit order executor"""
         self.client = BinanceFuturesClient()
         logger.info("Stop-limit order executor initialized")
     
     def execute(self, symbol: str, side: str, quantity: float, 
                 stop_price: float, limit_price: float, 
                 time_in_force: str = 'GTC') -> dict:
-        """
-        Execute a stop-limit order
-        
-        Args:
-            symbol: Trading pair (e.g., BTCUSDT)
-            side: BUY or SELL
-            quantity: Order quantity
-            stop_price: Trigger price
-            limit_price: Limit price after trigger
-            time_in_force: GTC, IOC, or FOK
-            
-        Returns:
-            Order response from Binance API
-        """
         try:
-            # Validate inputs
             symbol = OrderValidator.validate_symbol(symbol)
             side = OrderValidator.validate_side(side)
             quantity = OrderValidator.validate_quantity(quantity)
             stop_price = OrderValidator.validate_price(stop_price)
             limit_price = OrderValidator.validate_price(limit_price)
             
-            # Prepare order parameters
             order_params = {
                 'symbol': symbol,
                 'side': side,
@@ -56,7 +34,6 @@ class StopLimitOrderExecutor:
             
             logger.info(f"Executing stop-limit order", extra=order_params)
             
-            # Place order
             result = self.client.place_order(order_params)
             
             logger.info(f"Stop-limit order placed successfully", extra={
@@ -72,7 +49,6 @@ class StopLimitOrderExecutor:
             raise
 
 def main():
-    """CLI entry point for stop-limit orders"""
     setup_logging()
     
     if len(sys.argv) < 6:
