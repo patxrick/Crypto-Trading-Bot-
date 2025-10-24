@@ -1,7 +1,3 @@
-"""
-Limit order execution module
-Limit orders are placed at a specific price and executed when market reaches that price
-"""
 import sys
 import logging
 from logger_config import setup_logging
@@ -11,36 +7,19 @@ from validators import OrderValidator, ValidationError
 logger = logging.getLogger(__name__)
 
 class LimitOrderExecutor:
-    """Execute limit orders on Binance Futures"""
     
     def __init__(self):
-        """Initialize limit order executor"""
         self.client = BinanceFuturesClient()
         logger.info("Limit order executor initialized")
     
     def execute(self, symbol: str, side: str, quantity: float, price: float, 
                 time_in_force: str = 'GTC') -> dict:
-        """
-        Execute a limit order
-        
-        Args:
-            symbol: Trading pair (e.g., BTCUSDT)
-            side: BUY or SELL
-            quantity: Order quantity
-            price: Limit price
-            time_in_force: GTC (Good Till Cancel), IOC (Immediate or Cancel), FOK (Fill or Kill)
-            
-        Returns:
-            Order response from Binance API
-        """
         try:
-            # Validate inputs
             symbol = OrderValidator.validate_symbol(symbol)
             side = OrderValidator.validate_side(side)
             quantity = OrderValidator.validate_quantity(quantity)
             price = OrderValidator.validate_price(price)
             
-            # Prepare order parameters
             order_params = {
                 'symbol': symbol,
                 'side': side,
@@ -52,7 +31,6 @@ class LimitOrderExecutor:
             
             logger.info(f"Executing limit order", extra=order_params)
             
-            # Place order
             result = self.client.place_order(order_params)
             
             logger.info(f"Limit order placed successfully", extra={
@@ -74,7 +52,6 @@ class LimitOrderExecutor:
             raise
 
 def main():
-    """CLI entry point for limit orders"""
     setup_logging()
     
     if len(sys.argv) < 5:
