@@ -1,7 +1,3 @@
-"""
-Market order execution module
-Market orders are executed immediately at the best available price
-"""
 import sys
 import logging
 from logger_config import setup_logging
@@ -11,32 +7,16 @@ from validators import OrderValidator, ValidationError
 logger = logging.getLogger(__name__)
 
 class MarketOrderExecutor:
-    """Execute market orders on Binance Futures"""
-    
     def __init__(self):
-        """Initialize market order executor"""
         self.client = BinanceFuturesClient()
         logger.info("Market order executor initialized")
     
     def execute(self, symbol: str, side: str, quantity: float) -> dict:
-        """
-        Execute a market order
-        
-        Args:
-            symbol: Trading pair (e.g., BTCUSDT)
-            side: BUY or SELL
-            quantity: Order quantity
-            
-        Returns:
-            Order response from Binance API
-        """
         try:
-            # Validate inputs
             symbol = OrderValidator.validate_symbol(symbol)
             side = OrderValidator.validate_side(side)
             quantity = OrderValidator.validate_quantity(quantity)
             
-            # Prepare order parameters
             order_params = {
                 'symbol': symbol,
                 'side': side,
@@ -45,8 +25,6 @@ class MarketOrderExecutor:
             }
             
             logger.info(f"Executing market order", extra=order_params)
-            
-            # Place order
             result = self.client.place_order(order_params)
             
             logger.info(f"Market order executed successfully", extra={
@@ -68,7 +46,6 @@ class MarketOrderExecutor:
             raise
 
 def main():
-    """CLI entry point for market orders"""
     setup_logging()
     
     if len(sys.argv) != 4:
